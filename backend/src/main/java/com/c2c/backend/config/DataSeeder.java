@@ -2,9 +2,11 @@ package com.c2c.backend.config;
 
 import com.c2c.backend.entity.Country;
 import com.c2c.backend.entity.ExposureLink;
+import com.c2c.backend.entity.Holding;
 import com.c2c.backend.entity.MarketSector;
 import com.c2c.backend.repository.CountryRepository;
 import com.c2c.backend.repository.ExposureLinkRepository;
+import com.c2c.backend.repository.HoldingRepository;
 import com.c2c.backend.repository.MarketSectorRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -18,13 +20,16 @@ public class DataSeeder implements CommandLineRunner {
     private final CountryRepository countryRepo;
     private final MarketSectorRepository sectorRepo;
     private final ExposureLinkRepository exposureRepo;
+    private final HoldingRepository holdingRepo;
 
     public DataSeeder(CountryRepository countryRepo,
                        MarketSectorRepository sectorRepo,
-                       ExposureLinkRepository exposureRepo) {
+                       ExposureLinkRepository exposureRepo,
+                       HoldingRepository holdingRepo) {
         this.countryRepo = countryRepo;
         this.sectorRepo = sectorRepo;
         this.exposureRepo = exposureRepo;
+        this.holdingRepo = holdingRepo;
     }
 
     @Override
@@ -70,6 +75,16 @@ public class DataSeeder implements CommandLineRunner {
         exposureRepo.save(buildLink(us, banking, 55.0));
 
         System.out.println("Seed data inserted: 3 countries, 5 sectors, 4 exposure links.");
+
+        // Seed holdings for Portfolio Exposure feature (v2)
+        if (holdingRepo.count() == 0) {
+            holdingRepo.save(buildHolding("RELIANCE", "Reliance Industries", "Energy", "IN", 18.0));
+            holdingRepo.save(buildHolding("TCS", "Tata Consultancy Services", "Tech", "IN", 12.5));
+            holdingRepo.save(buildHolding("HDFCBANK", "HDFC Bank", "Banking", "IN", 15.0));
+            holdingRepo.save(buildHolding("APPLE", "Apple Inc.", "Tech", "US", 10.0));
+            holdingRepo.save(buildHolding("SINOPEC", "China Petrochemical", "Energy", "CN", 8.0));
+            System.out.println("Seed data inserted: 5 holdings.");
+        }
     }
 
     private ExposureLink buildLink(Country country, MarketSector sector, double score) {
@@ -78,5 +93,15 @@ public class DataSeeder implements CommandLineRunner {
         link.setSector(sector);
         link.setExposureScore(score);
         return link;
+    }
+
+    private Holding buildHolding(String ticker, String name, String sector, String region, double exposurePct) {
+        Holding h = new Holding();
+        h.setTicker(ticker);
+        h.setName(name);
+        h.setSector(sector);
+        h.setRegion(region);
+        h.setExposurePct(exposurePct);
+        return h;
     }
 }

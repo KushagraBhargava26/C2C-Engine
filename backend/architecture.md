@@ -145,3 +145,8 @@ New entity `Holding` (ticker, name, sector, region, exposurePct) + `HoldingRepos
 
 ### Step 17 — Analytics: Sector Impact Endpoint (v2)
 `SectorImpactItemDTO`, `SectorImpactResponseDTO`, `AnalyticsService` (uses a JPQL `@Query` with `GROUP BY` on `ExposureLink.sector.name` to compute average exposure score and incident count per sector — no new table, pure aggregation), `AnalyticsController` (`GET /api/v1/analytics/sector-impact`). Verified via compile (33 source files, BUILD SUCCESS). Live test pending — will return data based on existing seeded `ExposureLink` rows.
+
+### Step 18 — Analytics: Sentiment Timeseries Endpoint (v2)
+`SentimentTimeseriesPointDTO`, `SentimentTimeseriesResponseDTO` added. `AnalyticsService` extended with `getSentimentTimeseries()` — buckets incidents from the last 24h by hour (`Instant.truncatedTo(ChronoUnit.HOURS)`), computes average signed sentiment per bucket. New repository method `findByCreatedAtAfter` added to `IncidentEventRepository`. New controller method `GET /api/v1/analytics/sentiment-timeseries` added to `AnalyticsController`.
+**Design decision documented:** `IncidentEvent` doesn't store a raw sentiment value, only `riskLevel` + `confidenceScore`. Signed sentiment is derived: `riskLevel >= MEDIUM` → `-confidenceScore` (negative signal); `riskLevel = LOW` → `+confidenceScore * 0.3` (mild positive signal). This is a documented approximation, not a stored/real sentiment score.
+Verified via compile (35 source files, BUILD SUCCESS). Live test pending — needs at least one incident within the last 24h to return non-empty points.
