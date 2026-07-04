@@ -1,0 +1,56 @@
+// world-atlas's map data keys each country by ISO 3166-1 NUMERIC id,
+// but CONTRACT.md uses alpha-2 codes everywhere. This bridges the two.
+// Not exhaustive - covers common countries, enough for a meaningful demo.
+
+export const NUMERIC_TO_ALPHA2 = {
+  356: "IN",
+  156: "CN",
+  840: "US",
+  643: "RU",
+  "076": "BR",
+  792: "TR",
+  818: "EG",
+  566: "NG",
+  586: "PK",
+  360: "ID",
+  704: "VN",
+  764: "TH",
+  484: "MX",
+  231: "ET",
+  710: "ZA",
+  170: "CO",
+  364: "IR",
+  "032": "AR",
+  826: "GB",
+  276: "DE",
+  250: "FR",
+  392: "JP",
+  410: "KR",
+  "036": "AU",
+  124: "CA",
+  380: "IT",
+  724: "ES",
+  682: "SA",
+  376: "IL",
+  804: "UA",
+  616: "PL",
+  756: "CH",
+  528: "NL",
+  752: "SE",
+  578: "NO",
+  "050": "BD",
+  144: "LK",
+  608: "PH",
+  458: "MY",
+  702: "SG",
+  784: "AE",
+  "012": "DZ",
+  504: "MA",
+  152: "CL",
+  604: "PE",
+};
+
+export function alpha2ForNumericId(numericId) {
+  const padded = String(numericId).padStart(3, "0");
+  return NUMERIC_TO_ALPHA2[padded] || null;
+}

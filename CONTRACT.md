@@ -41,6 +41,35 @@ This file is the single source of truth for data shapes between all three servic
 ### Health Check
 `GET http://localhost:8000/health` → `200 OK` with `{"status": "ok"}`
 
+### Batch Endpoint (optional, added post-MVP — not required for core scope)
+`POST http://localhost:8000/api/v1/analyze/batch`
+
+#### Request Body
+```json
+{
+  "incidents": [
+    { "incidentText": "Tensions escalate along the eastern border as troops mobilize.", "sourceRegion": "IN", "timestamp": "2026-07-04T10:15:00Z" },
+    { "incidentText": "Trade talks conclude successfully.", "sourceRegion": "US", "timestamp": "2026-07-04T11:00:00Z" }
+  ]
+}
+```
+
+#### Response Body
+```json
+{
+  "results": [
+    { "sentimentLabel": "NEGATIVE", "confidenceScore": 0.87, "riskLevel": "HIGH", "region": "IN", "analyzedAt": "2026-07-04T10:15:02Z" },
+    { "sentimentLabel": "POSITIVE", "confidenceScore": 0.80, "riskLevel": "LOW", "region": "US", "analyzedAt": "2026-07-04T10:15:02Z" }
+  ]
+}
+```
+
+**Field notes:**
+- Each item in `results` has the exact same shape as the single `/analyze` response above.
+- `results` is returned in the same order as `incidents` was submitted.
+- 422 if `incidents` is an empty array.
+- Not required for the MVP — available if the backend prefers to batch-submit multiple incidents in one call instead of calling `/analyze` per item.
+
 ---
 
 ## 2. Spring Boot (Backbone) → React (Face)
@@ -261,4 +290,5 @@ Powers the Analytics page charts. **No new table required** — both are aggrega
 ## Changelog
 
 - **v1:** Core pipeline — Python analysis endpoint, incident feed, exposure heatmap, incident submission.
-- **v2 (2026-07-04, Varsh):** Added Country Risk Detail, Portfolio Exposure, Knowledge Graph, and Analytics endpoints for new frontend pages. One new table (`Holding`). Resolved open decisions: graph and portfolio chains are seeded, not AI-generated.                                                                
+- **v2 (2026-07-04, Varsh):** Added Country Risk Detail, Portfolio Exposure, Knowledge Graph, and Analytics endpoints for new frontend pages. One new table (`Holding`). Resolved open decisions: graph and portfolio chains are seeded, not AI-generated.
+- **v2.1 (2026-07-04):** Added optional `POST /api/v1/analyze/batch` endpoint on the Python (AI Brain) service. Not required for MVP — available if backend wants to batch-submit incidents instead of calling `/analyze` per item.

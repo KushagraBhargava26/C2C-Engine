@@ -1,7 +1,9 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +12,8 @@ from fastapi.responses import JSONResponse
 from app.routers import analyze, health
 from app.services.sentiment_service import SentimentService
 from app.services.risk_service import RiskService
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("c2c_brain")
@@ -34,9 +38,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+cors_origins = os.getenv(
+    "CORS_ORIGINS", "http://localhost:8080,http://localhost:5173"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:5173"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
