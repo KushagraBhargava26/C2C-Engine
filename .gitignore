@@ -1,0 +1,28 @@
+# =========================
+# AI Engine (Python)
+# =========================
+# Ignore virtual environments
+ai-engine/venv/
+# Ignore Python compiled bytecode and cache directories
+ai-engine/__pycache__/
+ai-engine/*.pyc
+
+# =========================
+# Backend (Java / Maven)
+# =========================
+# Ignore Maven build output and compiled artifacts
+backend/target/
+backend/.mvn/
+# Ignore IntelliJ IDEA IDE specific workspace files
+backend/*.iml
+backend/.idea/
+
+# =========================
+# Frontend (Node.js / React / Vue etc.)
+# =========================
+# Ignore heavy downloaded dependencies
+frontend/node_modules/
+# Ignore production build outputs
+frontend/dist/
+# Ignore sensitive environment variables and local secrets
+frontend/.env
