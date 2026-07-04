@@ -1,16 +1,17 @@
 package com.c2c.backend.service;
 
 import com.c2c.backend.client.PythonAnalysisClient;
+import com.c2c.backend.dto.IncidentResponseDTO;
 import com.c2c.backend.dto.PythonAnalysisRequest;
 import com.c2c.backend.dto.PythonAnalysisResponse;
 import com.c2c.backend.entity.Country;
-import com.c2c.backend.entity.ExposureLink;
 import com.c2c.backend.entity.IncidentEvent;
-import com.c2c.backend.entity.MarketSector;
 import com.c2c.backend.repository.CountryRepository;
 import com.c2c.backend.repository.ExposureLinkRepository;
 import com.c2c.backend.repository.IncidentEventRepository;
 import com.c2c.backend.repository.MarketSectorRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -37,7 +38,7 @@ public class IncidentService {
         this.exposureRepo = exposureRepo;
     }
 
-    public IncidentEvent processNewIncident(String incidentText, String sourceRegion) {
+    public IncidentResponseDTO processNewIncident(String incidentText, String sourceRegion) {
         // Step 1: Call Python for sentiment/risk analysis
         PythonAnalysisRequest request = new PythonAnalysisRequest(
                 incidentText, sourceRegion, Instant.now().toString());
@@ -50,17 +51,33 @@ public class IncidentService {
         incident.setRiskLevel(IncidentEvent.RiskLevel.valueOf(analysis.getRiskLevel()));
         incident.setConfidenceScore(analysis.getConfidenceScore());
         incident.setCreatedAt(Instant.now());
-        incidentRepo.save(incident);
+        IncidentEvent saved = incidentRepo.save(incident);
 
         // Step 3: Ensure the country exists (create if not)
-        Country country = countryRepo.findByIsoCode(sourceRegion)
+        countryRepo.findByIsoCode(sourceRegion)
                 .orElseGet(() -> {
                     Country c = new Country();
                     c.setIsoCode(sourceRegion);
-                    c.setName(sourceRegion); // placeholder name, can be improved later
+                    c.setName(sourceRegion); // placeholder, can be enriched later
                     return countryRepo.save(c);
                 });
 
-        return incident;
+        return toDTO(saved);
+    }
+
+    public Page<IncidentResponseDTO> getIncidents(Pageable pageable) {
+        return incidentRepo.findAllByOrderByCreatedAtDesc(pageable)
+                .map(this::toDTO);
+    }
+
+    private IncidentResponseDTO toDTO(IncidentEvent incident) {
+        return new IncidentResponseDTO(
+                incident.getId(),
+                incident.getIncidentText(),
+                incident.getRegion(),
+                incident.getRiskLevel().name(),
+                incident.getConfidenceScore(),
+                incident.getCreatedAt()
+        );
     }
 }
