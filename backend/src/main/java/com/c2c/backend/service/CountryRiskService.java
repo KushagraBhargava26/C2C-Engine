@@ -32,16 +32,22 @@ public class CountryRiskService {
             throw new NoSuchElementException("No incidents found for region: " + isoCode);
         }
 
-        // riskScore: average confidence of MEDIUM+ risk incidents, scaled 0-100
         List<IncidentEvent> significant = recentIncidents.stream()
                 .filter(i -> i.getRiskLevel() != IncidentEvent.RiskLevel.LOW)
                 .collect(Collectors.toList());
 
-        double avgConfidence = significant.isEmpty()
-                ? recentIncidents.stream().mapToDouble(IncidentEvent::getConfidenceScore).average().orElse(0.0)
-                : significant.stream().mapToDouble(IncidentEvent::getConfidenceScore).average().orElse(0.0);
-
-        int riskScore = (int) Math.round(avgConfidence * 100);
+        int riskScore;
+        if (significant.isEmpty()) {
+            // All incidents are LOW risk — cap the aggregate score low, regardless of
+            // confidence
+            riskScore = 10;
+        } else {
+            double avgConfidence = significant.stream()
+                    .mapToDouble(IncidentEvent::getConfidenceScore)
+                    .average()
+                    .orElse(0.0);
+            riskScore = (int) Math.round(avgConfidence * 100);
+        }
         String riskLevel = deriveRiskLevel(riskScore);
 
         List<String> affectedSectors = exposureRepo.findByCountry_IsoCode(isoCode).stream()
@@ -60,14 +66,16 @@ public class CountryRiskService {
                 recentIncidents.size(),
                 affectedSectors,
                 marketImpactPct,
-                Instant.now()
-        );
+                Instant.now());
     }
 
     private String deriveRiskLevel(int score) {
-        if (score >= 75) return "CRITICAL";
-        if (score >= 50) return "HIGH";
-        if (score >= 25) return "MEDIUM";
+        if (score >= 75)
+            return "CRITICAL";
+        if (score >= 50)
+            return "HIGH";
+        if (score >= 25)
+            return "MEDIUM";
         return "LOW";
     }
 }
