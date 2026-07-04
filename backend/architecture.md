@@ -142,3 +142,6 @@ New entity `Holding` (ticker, name, sector, region, exposurePct) + `HoldingRepos
 2. Live end-to-end test of `POST /api/v1/incidents` once the Python teammate's `/api/v1/analyze` service is running (blocked on their side, not mine — check status before attempting).
 3. Build remaining v2 endpoints in this order: `sector-impact` analytics → `sentiment-timeseries` analytics → `portfolio/exposure` (needs seeded `Holding` rows + hand-written `chain` arrays) → `graph` (static hardcoded JSON, no DB work, do last since it's fastest).
 4. Optional cleanup: remove the handful of harmless unused-import/unused-field IDE warnings noted in Section 5.
+
+### Step 17 — Analytics: Sector Impact Endpoint (v2)
+`SectorImpactItemDTO`, `SectorImpactResponseDTO`, `AnalyticsService` (uses a JPQL `@Query` with `GROUP BY` on `ExposureLink.sector.name` to compute average exposure score and incident count per sector — no new table, pure aggregation), `AnalyticsController` (`GET /api/v1/analytics/sector-impact`). Verified via compile (33 source files, BUILD SUCCESS). Live test pending — will return data based on existing seeded `ExposureLink` rows.

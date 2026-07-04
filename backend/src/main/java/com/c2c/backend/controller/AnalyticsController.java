@@ -1,6 +1,7 @@
 package com.c2c.backend.controller;
 
 import com.c2c.backend.dto.SectorImpactResponseDTO;
+import com.c2c.backend.dto.SentimentTimeseriesResponseDTO;
 import com.c2c.backend.service.AnalyticsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,5 +21,10 @@ public class AnalyticsController {
     @GetMapping("/sector-impact")
     public ResponseEntity<SectorImpactResponseDTO> getSectorImpact() {
         return ResponseEntity.ok(analyticsService.getSectorImpact());
+    }
+
+    @GetMapping("/sentiment-timeseries")
+    public ResponseEntity<SentimentTimeseriesResponseDTO> getSentimentTimeseries() {
+        return ResponseEntity.ok(analyticsService.getSentimentTimeseries());
     }
 }
