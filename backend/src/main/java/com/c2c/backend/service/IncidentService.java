@@ -2,6 +2,7 @@ package com.c2c.backend.service;
 
 import com.c2c.backend.client.PythonAnalysisClient;
 import com.c2c.backend.dto.IncidentResponseDTO;
+import com.c2c.backend.dto.PagedIncidentResponseDTO;
 import com.c2c.backend.dto.PythonAnalysisRequest;
 import com.c2c.backend.dto.PythonAnalysisResponse;
 import com.c2c.backend.entity.Country;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class IncidentService {
@@ -65,9 +68,18 @@ public class IncidentService {
         return toDTO(saved);
     }
 
-    public Page<IncidentResponseDTO> getIncidents(Pageable pageable) {
-        return incidentRepo.findAllByOrderByCreatedAtDesc(pageable)
-                .map(this::toDTO);
+    public PagedIncidentResponseDTO getIncidents(Pageable pageable) {
+        Page<IncidentEvent> result = incidentRepo.findAllByOrderByCreatedAtDesc(pageable);
+        List<IncidentResponseDTO> content = result.getContent().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        return new PagedIncidentResponseDTO(
+                content,
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements()
+        );
     }
 
     private IncidentResponseDTO toDTO(IncidentEvent incident) {

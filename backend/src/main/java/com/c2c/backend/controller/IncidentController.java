@@ -2,6 +2,7 @@ package com.c2c.backend.controller;
 
 import com.c2c.backend.dto.IncidentRequestDTO;
 import com.c2c.backend.dto.IncidentResponseDTO;
+import com.c2c.backend.dto.PagedIncidentResponseDTO;
 import com.c2c.backend.service.IncidentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ public class IncidentController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<IncidentResponseDTO>> getIncidents(
+    public ResponseEntity<PagedIncidentResponseDTO> getIncidents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);

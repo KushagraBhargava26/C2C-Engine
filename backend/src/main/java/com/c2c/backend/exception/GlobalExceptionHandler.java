@@ -6,7 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.reactive.function.client.WebClientException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -25,8 +25,8 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, message);
     }
 
-    @ExceptionHandler(RestClientException.class)
-    public ResponseEntity<Map<String, Object>> handlePythonServiceError(RestClientException ex) {
+    @ExceptionHandler(WebClientException.class)
+    public ResponseEntity<Map<String, Object>> handlePythonServiceError(WebClientException ex) {
         return buildResponse(HttpStatus.BAD_GATEWAY, "Failed to reach AI analysis service");
     }
 
