@@ -9,4 +9,5 @@ import java.util.List;
 public interface IncidentEventRepository extends JpaRepository<IncidentEvent, Long> {
     Page<IncidentEvent> findAllByOrderByCreatedAtDesc(Pageable pageable);
     List<IncidentEvent> findByRegion(String region);
+    List<IncidentEvent> findByRegionAndCreatedAtAfter(String region, java.time.Instant since);
 }
