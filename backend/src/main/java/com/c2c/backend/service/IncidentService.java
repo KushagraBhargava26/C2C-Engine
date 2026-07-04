@@ -17,10 +17,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class IncidentService {
+
+    private static final Map<String, String> COUNTRY_NAMES = Map.of(
+            "IN", "India",
+            "US", "United States",
+            "CN", "China"
+    );
 
     private final PythonAnalysisClient pythonClient;
     private final IncidentEventRepository incidentRepo;
@@ -61,7 +68,7 @@ public class IncidentService {
                 .orElseGet(() -> {
                     Country c = new Country();
                     c.setIsoCode(sourceRegion);
-                    c.setName(sourceRegion); // placeholder, can be enriched later
+                    c.setName(COUNTRY_NAMES.getOrDefault(sourceRegion, sourceRegion));
                     return countryRepo.save(c);
                 });
 

@@ -161,3 +161,10 @@ Verified via compile (45 source files total, BUILD SUCCESS). Live test pending.
 Verified via compile (included in the same 45-file build as Step 19). Live test pending.
 
 **Milestone: all 8 CONTRACT.md endpoints are now code-complete.**
+
+### Step 21 — Bug Fix: DataSeeder Holdings Not Seeding
+Live testing of Portfolio Exposure endpoint revealed `holdings: []` (empty) despite seed code being written in Step 19. Root cause: the holdings-seeding block was placed after an early `return` statement guarded by `if (countryRepo.count() > 0)` — since countries already existed from prior test runs, the method returned before ever reaching the holdings block.
+**Fix:** Restructured `DataSeeder.run()` into two independent checks (`seedCoreData()` gated on `countryRepo.count()`, `seedHoldings()` gated on `holdingRepo.count()`), so one seeding path can never block the other.
+Verified via live run + curl test — `GET /api/v1/portfolio/exposure` now returns all 5 seeded holdings, each with a correct 4-node chain, `impactPct` correctly present only on the final node (confirms `@JsonInclude(NON_NULL)` is working as intended), and `isIllustrative: true` on every holding.
+
+**Milestone confirmed: all 8 CONTRACT.md endpoints are code-complete AND live-verified except `POST /api/v1/incidents` full flow (blocked on AI teammate's Python service) and `GET /api/v1/countries/{isoCode}` (needs a real incident to exist — code-correct, untested with live data).**

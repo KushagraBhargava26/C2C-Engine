@@ -5,7 +5,6 @@ import com.c2c.backend.dto.IncidentResponseDTO;
 import com.c2c.backend.dto.PagedIncidentResponseDTO;
 import com.c2c.backend.service.IncidentService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
