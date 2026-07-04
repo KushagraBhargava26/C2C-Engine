@@ -150,3 +150,14 @@ New entity `Holding` (ticker, name, sector, region, exposurePct) + `HoldingRepos
 `SentimentTimeseriesPointDTO`, `SentimentTimeseriesResponseDTO` added. `AnalyticsService` extended with `getSentimentTimeseries()` — buckets incidents from the last 24h by hour (`Instant.truncatedTo(ChronoUnit.HOURS)`), computes average signed sentiment per bucket. New repository method `findByCreatedAtAfter` added to `IncidentEventRepository`. New controller method `GET /api/v1/analytics/sentiment-timeseries` added to `AnalyticsController`.
 **Design decision documented:** `IncidentEvent` doesn't store a raw sentiment value, only `riskLevel` + `confidenceScore`. Signed sentiment is derived: `riskLevel >= MEDIUM` → `-confidenceScore` (negative signal); `riskLevel = LOW` → `+confidenceScore * 0.3` (mild positive signal). This is a documented approximation, not a stored/real sentiment score.
 Verified via compile (35 source files, BUILD SUCCESS). Live test pending — needs at least one incident within the last 24h to return non-empty points.
+
+### Step 19 — Portfolio Exposure Endpoint (v2)
+`ChainNodeDTO` (with `@JsonInclude(NON_NULL)` so `impactPct` only appears on the last chain node, per contract), `PortfolioHoldingDTO`, `PortfolioExposureResponseDTO` added. `PortfolioService` reads `Holding` rows and attaches a hand-authored illustrative `chain` per holding (marked `isIllustrative: true`, per CONTRACT.md Decision Log — not AI-derived). `PortfolioController` (`GET /api/v1/portfolio/exposure`) added. `DataSeeder` extended to seed 5 holdings (RELIANCE, TCS, HDFCBANK, APPLE, SINOPEC) with realistic sector/region/exposurePct values.
+**Correction during this step:** `exception` package had gotten nested inside `config/` then `dto/` due to accidental drag-and-drop in VS Code explorer — fixed by moving it back to sibling level with `client`/`config`/`controller`/`dto`. Verified via compile after fix.
+Verified via compile (45 source files total, BUILD SUCCESS). Live test pending.
+
+### Step 20 — Knowledge Graph Endpoint (v2)
+`GraphNodeDTO`, `GraphEdgeDTO`, `GraphResponseDTO` added. `GraphService` returns a small hand-authored static graph (6 nodes, 5 edges) covering COUNTRY/EVENT/COMMODITY/HOLDING/SECTOR node types and SANCTIONED_BY/IMPACTS/ALLIED_WITH relations — no database table involved at all, per CONTRACT.md Decision Log (not AI-derived entity extraction). `GraphController` (`GET /api/v1/graph`) added.
+Verified via compile (included in the same 45-file build as Step 19). Live test pending.
+
+**Milestone: all 8 CONTRACT.md endpoints are now code-complete.**
