@@ -12,7 +12,7 @@ public class PythonAnalysisClient {
 
     private final WebClient webClient;
 
-    public PythonAnalysisClient(@Value("${python.service.baseurl}") String baseUrl) {
+    public PythonAnalysisClient(@Value("${python.service.baseurl:http://localhost:8000}") String baseUrl) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();
