@@ -9,8 +9,8 @@ import { getMockCountryDetail } from "../data/mockCountries.js";
 // --- Mode switch -----------------------------------------------------------
 // Change this to false once your friend's Spring Boot endpoints are live.
 // This is the ONE line the whole app depends on for the mock -> real swap.
-const USE_MOCK = true;
-const BASE_URL = "http://localhost:8080";
+const USE_MOCK = false;
+const BASE_URL = "https://https://c2c-engine.onrender.com";
 
 const client = axios.create({
   baseURL: BASE_URL,
