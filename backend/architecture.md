@@ -184,3 +184,9 @@ Added as CONTRACT.md Endpoint H. `IncidentVolumeDayDTO`, `IncidentVolumeResponse
 Verified via compile (47 source files, BUILD SUCCESS). Live test pending — needs incidents spread across multiple days to see a meaningful bar chart (currently only 1 incident exists in the DB, from Step 22's live test).
 
 **All 9 CONTRACT.md endpoints (v1 + v2 + this addition) are now code-complete.**
+
+### Step 25 — Bug Fix: marketImpactPct Sign Convention + Optional Python Health Check
+Teammate review of the now-locked CONTRACT.md sign convention (`positive = market gain, negative = adverse impact`) caught that `CountryRiskService.java`'s `marketImpactPct` formula was always positive and scaled *up* with `riskScore` — meaning a CRITICAL-risk incident (riskScore 86) was producing `marketImpactPct: +4.3`, implying a market gain instead of an adverse impact.
+**Fix:** Flipped the sign — `marketImpactPct = -1 * (Math.round((riskScore / 20.0) * 10) / 10.0)`. A riskScore of 86 now correctly returns `-4.3`. Near-zero riskScores still return small negative values (no risk ≈ no impact, not "gain") — directionally correct and consistent with the simplified-formula caveat already noted in Section 5.
+**Also added (optional, non-blocking):** `PythonAnalysisClient.analyze()` now calls a new private `checkHealth()` method first, which pings `GET /health` on the Python service before `/api/v1/analyze`. On failure it throws a `WebClientException`, routed through the existing `GlobalExceptionHandler` (→ 502), so a down/slow Python service fails fast with a clear message instead of timing out mid-request on the real call.
+Verified via `mvnw.cmd compile` — BUILD SUCCESS. Live test pending — same blocker as Step 22/24 (needs the Python `/analyze`/`/health` service running to confirm end-to-end).

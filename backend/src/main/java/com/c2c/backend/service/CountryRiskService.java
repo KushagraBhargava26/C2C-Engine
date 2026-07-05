@@ -57,7 +57,7 @@ public class CountryRiskService {
                 .collect(Collectors.toList());
 
         // marketImpactPct: simplified proportional value; positive = adverse impact
-        double marketImpactPct = Math.round((riskScore / 20.0) * 10) / 10.0;
+        double marketImpactPct = -1 * (Math.round((riskScore / 20.0) * 10) / 10.0);
 
         return new CountryRiskDetailDTO(
                 isoCode,
