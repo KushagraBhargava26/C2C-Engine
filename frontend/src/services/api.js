@@ -1,6 +1,8 @@
 import axios from "axios";
 import { getMockIncidentsPage } from "../data/mockIncidents.js";
 import { getMockHeatmap } from "../data/mockHeatmap.js";
+import { getMockPortfolioExposure } from "../data/mockPortfolio.js";
+import { getMockSentimentTimeseries, getMockSectorImpact, getMockIncidentVolume } from "../data/mockAnalytics.js";
 
 // --- Mode switch -----------------------------------------------------------
 // Change this to false once your friend's Spring Boot endpoints are live.
@@ -54,6 +56,71 @@ export async function getHeatmap() {
   }
   try {
     const { data } = await client.get("/api/v1/exposure/heatmap");
+    return data;
+  } catch (err) {
+    throw normalizeError(err);
+  }
+}
+/**
+ * GET /api/v1/portfolio/exposure
+ */
+export async function getPortfolioExposure() {
+  if (USE_MOCK) {
+    await wait(500);
+    return getMockPortfolioExposure();
+  }
+  try {
+    const { data } = await client.get("/api/v1/portfolio/exposure");
+    return data;
+  } catch (err) {
+    throw normalizeError(err);
+  }
+}
+
+/**
+ * GET /api/v1/analytics/sentiment-timeseries
+ */
+export async function getSentimentTimeseries() {
+  if (USE_MOCK) {
+    await wait(400);
+    return getMockSentimentTimeseries();
+  }
+  try {
+    const { data } = await client.get("/api/v1/analytics/sentiment-timeseries");
+    return data;
+  } catch (err) {
+    throw normalizeError(err);
+  }
+}
+
+/**
+ * GET /api/v1/analytics/sector-impact
+ */
+export async function getSectorImpact() {
+  if (USE_MOCK) {
+    await wait(400);
+    return getMockSectorImpact();
+  }
+  try {
+    const { data } = await client.get("/api/v1/analytics/sector-impact");
+    return data;
+  } catch (err) {
+    throw normalizeError(err);
+  }
+}
+
+/**
+ * Incident volume isn't in CONTRACT.md v2 yet — piggybacking on the same
+ * analytics namespace for now. Flag this with the backend teammate before
+ * the real swap.
+ */
+export async function getIncidentVolume() {
+  if (USE_MOCK) {
+    await wait(400);
+    return getMockIncidentVolume();
+  }
+  try {
+    const { data } = await client.get("/api/v1/analytics/incident-volume");
     return data;
   } catch (err) {
     throw normalizeError(err);
