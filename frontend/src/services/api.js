@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getMockIncidentsPage } from "../data/mockIncidents.js";
 import { getMockHeatmap } from "../data/mockHeatmap.js";
+import { getMockPortfolioExposure } from "../data/mockPortfolio.js";
 
 // --- Mode switch -----------------------------------------------------------
 // Change this to false once your friend's Spring Boot endpoints are live.
@@ -54,6 +55,21 @@ export async function getHeatmap() {
   }
   try {
     const { data } = await client.get("/api/v1/exposure/heatmap");
+    return data;
+  } catch (err) {
+    throw normalizeError(err);
+  }
+}
+/**
+ * GET /api/v1/portfolio/exposure
+ */
+export async function getPortfolioExposure() {
+  if (USE_MOCK) {
+    await wait(500);
+    return getMockPortfolioExposure();
+  }
+  try {
+    const { data } = await client.get("/api/v1/portfolio/exposure");
     return data;
   } catch (err) {
     throw normalizeError(err);
