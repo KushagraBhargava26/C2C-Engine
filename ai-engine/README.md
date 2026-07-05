@@ -30,6 +30,7 @@ This repo does **not** ship model weights. Before running, place:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000 --host 0.0.0.0
 ```
 
 Interactive docs at `http://localhost:8000/docs`.
