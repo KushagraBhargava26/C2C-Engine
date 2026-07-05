@@ -7,6 +7,8 @@ import com.c2c.backend.repository.IncidentEventRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +33,27 @@ public class AnalyticsService {
                 .map(row -> new SectorImpactItemDTO(
                         (String) row[0],
                         (Double) row[1],
-                        (Long) row[2]
-                ))
+                        (Long) row[2]))
                 .collect(Collectors.toList());
 
         return new SectorImpactResponseDTO(items);
+    }
+
+    public IncidentVolumeResponseDTO getIncidentVolume() {
+        Instant sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        List<IncidentEvent> incidents = incidentRepo.findByCreatedAtAfter(sevenDaysAgo);
+
+        Map<LocalDate, Long> dailyCounts = incidents.stream()
+                .collect(Collectors.groupingBy(
+                        i -> i.getCreatedAt().atZone(ZoneOffset.UTC).toLocalDate(),
+                        TreeMap::new,
+                        Collectors.counting()));
+
+        List<IncidentVolumeDayDTO> days = dailyCounts.entrySet().stream()
+                .map(entry -> new IncidentVolumeDayDTO(entry.getKey().toString(), entry.getValue()))
+                .collect(Collectors.toList());
+
+        return new IncidentVolumeResponseDTO(days);
     }
 
     public SentimentTimeseriesResponseDTO getSentimentTimeseries() {
@@ -53,8 +71,7 @@ public class AnalyticsService {
         List<SentimentTimeseriesPointDTO> points = buckets.entrySet().stream()
                 .map(entry -> new SentimentTimeseriesPointDTO(
                         entry.getKey(),
-                        entry.getValue().stream().mapToDouble(Double::doubleValue).average().orElse(0.0)
-                ))
+                        entry.getValue().stream().mapToDouble(Double::doubleValue).average().orElse(0.0)))
                 .collect(Collectors.toList());
 
         return new SentimentTimeseriesResponseDTO("24h", points);

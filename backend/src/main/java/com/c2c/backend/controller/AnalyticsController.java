@@ -1,5 +1,6 @@
 package com.c2c.backend.controller;
 
+import com.c2c.backend.dto.IncidentVolumeResponseDTO;
 import com.c2c.backend.dto.SectorImpactResponseDTO;
 import com.c2c.backend.dto.SentimentTimeseriesResponseDTO;
 import com.c2c.backend.service.AnalyticsService;
@@ -26,5 +27,10 @@ public class AnalyticsController {
     @GetMapping("/sentiment-timeseries")
     public ResponseEntity<SentimentTimeseriesResponseDTO> getSentimentTimeseries() {
         return ResponseEntity.ok(analyticsService.getSentimentTimeseries());
+    }
+
+    @GetMapping("/incident-volume")
+    public ResponseEntity<IncidentVolumeResponseDTO> getIncidentVolume() {
+        return ResponseEntity.ok(analyticsService.getIncidentVolume());
     }
 }

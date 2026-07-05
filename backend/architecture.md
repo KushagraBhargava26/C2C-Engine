@@ -168,3 +168,19 @@ Live testing of Portfolio Exposure endpoint revealed `holdings: []` (empty) desp
 Verified via live run + curl test — `GET /api/v1/portfolio/exposure` now returns all 5 seeded holdings, each with a correct 4-node chain, `impactPct` correctly present only on the final node (confirms `@JsonInclude(NON_NULL)` is working as intended), and `isIllustrative: true` on every holding.
 
 **Milestone confirmed: all 8 CONTRACT.md endpoints are code-complete AND live-verified except `POST /api/v1/incidents` full flow (blocked on AI teammate's Python service) and `GET /api/v1/countries/{isoCode}` (needs a real incident to exist — code-correct, untested with live data).**
+
+### Step 23 — Bug Fix: Country Risk Aggregation Logic
+Live testing revealed an inconsistency: a single LOW-risk incident (riskLevel=LOW, confidenceScore=0.8648) produced an aggregate country riskLevel of CRITICAL via `GET /api/v1/countries/{isoCode}`. Root cause: when all incidents for a region were LOW risk (the "significant" filtered list was empty), the fallback logic averaged confidence across ALL incidents regardless of their risk level — so a high-confidence LOW-risk incident inflated the aggregate score incorrectly.
+**Fix:** When no MEDIUM+ incidents exist for a region, the aggregate riskScore is now capped at a fixed low value (10) rather than computed from confidence scores of LOW-risk incidents. Only MEDIUM+ incidents contribute to confidence-based score averaging.
+**Also hit and resolved:** a stale/orphaned Java process (from a prior `spring-boot:run` that wasn't cleanly terminated) was locking the `target/classes` directory, causing `mvn clean` to fail with a file-lock error even after closing the terminal. Resolved via `Stop-Process -Name java -Force`.
+Verified via live curl test — `GET /api/v1/countries/IN` now correctly returns `riskLevel: "LOW"` for the same underlying data that previously (incorrectly) showed CRITICAL.
+
+**This closes out the last known logic bug found during live integration testing.**
+
+### Step 24 — Incident Volume Endpoint (v2, added mid-sprint)
+Frontend teammate flagged that `IncidentVolumeChart.jsx` (already built against mock data) had no corresponding CONTRACT.md endpoint — a gap discovered during frontend review, not part of the original v2 plan.
+Clarified shape with frontend teammate: daily (not hourly) timeseries, last 7 days, flat count (no region/sector/risk breakdown — those are covered separately by Sector Impact and the Heatmap). `count` explicitly defined as incidents *created* that day (by `createdAt` date), documented to avoid ambiguity.
+Added as CONTRACT.md Endpoint H. `IncidentVolumeDayDTO`, `IncidentVolumeResponseDTO` created. `AnalyticsService.getIncidentVolume()` added — groups existing `IncidentEvent` rows by UTC calendar date over the last 7 days using `Collectors.groupingBy`. Reused the existing `findByCreatedAtAfter` repository method from Step 18, no new repository code needed. `GET /api/v1/analytics/incident-volume` added to `AnalyticsController`.
+Verified via compile (47 source files, BUILD SUCCESS). Live test pending — needs incidents spread across multiple days to see a meaningful bar chart (currently only 1 incident exists in the DB, from Step 22's live test).
+
+**All 9 CONTRACT.md endpoints (v1 + v2 + this addition) are now code-complete.**
