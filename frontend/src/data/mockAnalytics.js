@@ -15,8 +15,7 @@ const SENTIMENT_POINTS = [
 const SECTOR_IMPACT = [
   { sector: "Energy", avgExposureScore: 61.4, incidentCount: 18 },
   { sector: "Banking", avgExposureScore: 58.2, incidentCount: 9 },
-  { sector: "Defense", avgExposureScore: 55.7, incidentCount: 15 },
-  { sector: "Technology", avgExposureScore: 49.3, incidentCount: 11 },
+  { sector: "Tech", avgExposureScore: 49.3, incidentCount: 11 },
   { sector: "Manufacturing", avgExposureScore: 46.8, incidentCount: 12 },
   { sector: "Agriculture", avgExposureScore: 38.6, incidentCount: 6 },
 ];

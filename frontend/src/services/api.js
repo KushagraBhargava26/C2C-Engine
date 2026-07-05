@@ -3,6 +3,7 @@ import { getMockIncidentsPage } from "../data/mockIncidents.js";
 import { getMockHeatmap } from "../data/mockHeatmap.js";
 import { getMockPortfolioExposure } from "../data/mockPortfolio.js";
 import { getMockSentimentTimeseries, getMockSectorImpact, getMockIncidentVolume } from "../data/mockAnalytics.js";
+import { getMockGraph, getMockNodeDetails } from '../data/mockGraph';
 
 // --- Mode switch -----------------------------------------------------------
 // Change this to false once your friend's Spring Boot endpoints are live.
@@ -74,6 +75,23 @@ export async function getPortfolioExposure() {
     return data;
   } catch (err) {
     throw normalizeError(err);
+  }
+}
+
+/**
+ * GET /api/v1/graph
+ */
+export async function getGraph() {
+  if (USE_MOCK) {
+    await wait(400);
+    return getMockGraph();
+  }
+  try {
+    const { data } = await client.get("/api/v1/graph");
+    return data;
+  } catch (error) {
+    console.error("getGraph failed:", error);
+    throw error;
   }
 }
 
