@@ -74,7 +74,7 @@ export default function RiskMap() {
   async function handleCountryClick(geo) {
     const alpha2 = alpha2ForNumericId(geo.id);
     if (!alpha2) return;
-    const detail =await getMockCountryDetail(alpha2);
+    const detail = await getCountryDetail(alpha2);
     setSelected(detail);
   }
 
