@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import worldData from "world-atlas/countries-110m.json";
 import { alpha2ForNumericId } from "../utils/isoCountries.js";
-import { getMockCountryDetail, getMockRiskScoreForMap } from "../data/mockCountries.js";
+import { getMockRiskScoreForMap } from "../data/mockCountries.js";
+import { getCountryDetail } from "../services/api.js";
 import { exposureColor, riskStyle } from "../utils/risk.js";
 import { FlagIcon } from "../utils/region.jsx";
 
@@ -10,9 +11,7 @@ function CountryDetailPanel({ detail, onClose }) {
   if (!detail) {
     return (
       <div className="flex h-full items-center justify-center rounded-lg border border-steel bg-ink-soft p-6 text-center">
-        <p className="font-mono text-xs uppercase tracking-widest text-parchment-faint">
-          Click a country to view details
-        </p>
+        <p className="font-mono text-xs uppercase tracking-widest text-parchment-faint">Click a country to view details</p>
       </div>
     );
   }
@@ -32,9 +31,7 @@ function CountryDetailPanel({ detail, onClose }) {
       </div>
 
       <div className="mb-4">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-parchment-faint">
-          Risk score
-        </p>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-parchment-faint">Risk score</p>
         <div className="flex items-baseline gap-2">
           <p className="font-mono text-3xl font-semibold text-parchment">{detail.riskScore}</p>
           <span className={`rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider ${style.chip}`}>
@@ -58,9 +55,7 @@ function CountryDetailPanel({ detail, onClose }) {
       </div>
 
       <div>
-        <p className="mb-1.5 font-mono text-[10px] uppercase tracking-widest text-parchment-faint">
-          Affected sectors
-        </p>
+        <p className="mb-1.5 font-mono text-[10px] uppercase tracking-widest text-parchment-faint">Affected sectors</p>
         <div className="flex flex-wrap gap-1.5">
           {detail.affectedSectors.map((s) => (
             <span key={s} className="rounded border border-steel-light px-2 py-0.5 text-xs text-parchment-dim">
@@ -76,10 +71,10 @@ function CountryDetailPanel({ detail, onClose }) {
 export default function RiskMap() {
   const [selected, setSelected] = useState(null);
 
-  function handleCountryClick(geo) {
+  async function handleCountryClick(geo) {
     const alpha2 = alpha2ForNumericId(geo.id);
     if (!alpha2) return;
-    const detail = getMockCountryDetail(alpha2);
+    const detail =await getMockCountryDetail(alpha2);
     setSelected(detail);
   }
 
@@ -87,12 +82,7 @@ export default function RiskMap() {
     <div className="grid grid-cols-1 gap-5 p-8 lg:grid-cols-3">
       <div className="rounded-lg border border-steel bg-ink-soft p-4 lg:col-span-2">
         <h2 className="mb-3 font-display text-sm font-semibold text-parchment">Global Risk Map</h2>
-        <ComposableMap
-          projectionConfig={{ scale: 140 }}
-          width={800}
-          height={450}
-          style={{ width: "100%", height: "auto" }}
-        >
+        <ComposableMap projectionConfig={{ scale: 140 }} width={800} height={450} style={{ width: "100%", height: "auto" }}>
           <Geographies geography={worldData}>
             {({ geographies }) =>
               geographies.map((geo) => {
