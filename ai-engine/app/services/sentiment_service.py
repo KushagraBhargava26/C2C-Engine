@@ -1,72 +1,72 @@
 """
-Wraps FinBERT (ProsusAI/finbert) inference behind a clean function.
-Isolated from the API layer so it's independently testable and so the
-risk_service can reuse the same embeddings without importing FastAPI code.
+FinBERT sentiment wrapper.
 
-ASSUMPTION: model checkpoint is ProsusAI/finbert (per roadmap). This module
-reads label order from the model's own config.id2label rather than hardcoding
-index->label, so it will still be correct even if a different finetuned
-checkpoint is dropped into ml_artifacts/finbert_model/ with a different label order.
+Loads tokenizer + model straight from the Hugging Face repo (public repo,
+so no token needed). transformers handles the download + local caching
+automatically -- no manual file management required.
+
+Interface matches what app/routers/analyze.py expects:
+  - analyze(text) -> SentimentResult (single)
+  - analyze_batch(texts) -> list[SentimentResult]
 """
+
+import os
 from dataclasses import dataclass
-from pathlib import Path
 
+import numpy as np
 import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-MODEL_DIR = Path(__file__).resolve().parent.parent / "ml_artifacts" / "finbert_model"
+FINBERT_REPO_ID = os.getenv("FINBERT_REPO_ID", "Lakshya-Sahu47/c2c-finbert-risk")
 
 
 @dataclass
 class SentimentResult:
-    label: str            # "POSITIVE" | "NEGATIVE" | "NEUTRAL"
-    confidence: float     # 0.0-1.0, softmax prob of the winning class
-    embedding: "list[float]"  # 768-dim CLS embedding, fed to risk_service
+    label: str
+    confidence: float
+    embedding: np.ndarray
 
 
 class SentimentService:
-    """Loads FinBERT once at startup (see main.py lifespan) and serves
-    inference calls. Do not instantiate per-request — model load is slow."""
+    def __init__(self, repo_id: str = FINBERT_REPO_ID):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def __init__(self, model_dir: Path = MODEL_DIR):
-        if not model_dir.exists() or not any(model_dir.iterdir()):
-            raise FileNotFoundError(
-                f"FinBERT model files not found in {model_dir}. "
-                "Copy model.safetensors, config.json, tokenizer.json, "
-                "tokenizer_config.json into this folder."
-            )
-        self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_dir, output_hidden_states=True
-        )
+        self.tokenizer = AutoTokenizer.from_pretrained(repo_id)
+        self.model = AutoModelForSequenceClassification.from_pretrained(repo_id)
+        self.model.to(self.device)
         self.model.eval()
-        # id2label comes from the checkpoint's own config — don't hardcode.
-        self.id2label = {
-            int(k): v.upper() for k, v in self.model.config.id2label.items()
-        }
 
-    @torch.no_grad()
-    def analyze(self, text: str) -> SentimentResult:
+        # Use the model's own label mapping -- never hardcode label order.
+        self.id2label = self.model.config.id2label
+
+    def _predict_batch(self, texts: list[str]) -> list[SentimentResult]:
         inputs = self.tokenizer(
-            text, return_tensors="pt", truncation=True, max_length=512
-        )
-        outputs = self.model(**inputs)
+            texts, return_tensors="pt", truncation=True, padding=True, max_length=64,
+        ).to(self.device)
 
-        probs = torch.softmax(outputs.logits, dim=-1)[0]
-        top_idx = int(torch.argmax(probs).item())
-        label = self.id2label.get(top_idx, "NEUTRAL")
-        confidence = float(probs[top_idx].item())
+        with torch.no_grad():
+            outputs = self.model(**inputs, output_hidden_states=True)
 
-        # CLS token embedding from the last hidden layer — this is the
-        # 768-dim feature vector the risk_classifier.joblib was trained on.
-        last_hidden = outputs.hidden_states[-1]
-        cls_embedding = last_hidden[0, 0, :].tolist()
+        probs = F.softmax(outputs.logits, dim=-1)
+        cls_embeddings = outputs.hidden_states[-1][:, 0, :].cpu().numpy()
 
-        return SentimentResult(
-            label=label, confidence=confidence, embedding=cls_embedding
-        )
+        results = []
+        for i in range(len(texts)):
+            top_idx = int(torch.argmax(probs[i]).item())
+            label = self.id2label[top_idx].upper()
+            confidence = float(probs[i][top_idx].item())
+            results.append(
+                SentimentResult(
+                    label=label,
+                    confidence=confidence,
+                    embedding=cls_embeddings[i],
+                )
+            )
+        return results
 
-    def analyze_batch(self, texts: "list[str]") -> "list[SentimentResult]":
-        # Simple loop for now; batch tensor inference is a stretch-goal
-        # optimization (roadmap hour 12-14) if latency becomes an issue.
-        return [self.analyze(t) for t in texts]
+    def analyze(self, text: str) -> SentimentResult:
+        return self._predict_batch([text])[0]
+
+    def analyze_batch(self, texts: list[str]) -> list[SentimentResult]:
+        return self._predict_batch(texts)

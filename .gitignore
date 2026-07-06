@@ -8,6 +8,8 @@ ai-engine/1233
 
 ai-engine/app/ml_artifacts/finbert_model/*
 !ai-engine/app/ml_artifacts/finbert_model/.gitkeep
+ai-engine/app/ml_artifacts/risk_classifier/*
+!ai-engine/app/ml_artifacts/risk_classifier/.gitkeep
 
 __pycache__/
 *.pyc
